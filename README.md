@@ -29,3 +29,4 @@ podman-compose up -d
 - https://blog.ruanbekker.com/blog/2020/02/01/setup-thanos-on-docker-a-highly-available-prometheus
 - https://aws.amazon.com/blogs/opensource/improving-ha-and-long-term-storage-for-prometheus-using-thanos-on-eks-with-s3/
 - https://github.com/thanos-io/thanos/blob/main/docs/components/sidecar.md
+- https://thanos.io/tip/components/receive.md/
