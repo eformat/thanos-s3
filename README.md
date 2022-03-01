@@ -26,6 +26,8 @@ podman-compose up -d
 ## Links
 
 - https://docs.openshift.com/container-platform/4.10/monitoring/configuring-the-monitoring-stack.html#configuring_remote_write_storage_configuring-the-monitoring-stack
+- https://access.redhat.com/solutions/4931911
+- https://issues.redhat.com/browse/RFE-719
 - https://blog.ruanbekker.com/blog/2020/02/01/setup-thanos-on-docker-a-highly-available-prometheus
 - https://aws.amazon.com/blogs/opensource/improving-ha-and-long-term-storage-for-prometheus-using-thanos-on-eks-with-s3/
 - https://github.com/thanos-io/thanos/blob/main/docs/components/sidecar.md
