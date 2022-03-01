@@ -2,12 +2,11 @@
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:  
-  name: minio-thanos-s3-ui
+  name: minio-s3-ui
   labels:
     app.kubernetes.io/name: minio
-    app.kubernetes.io/instance: min
+    app.kubernetes.io/instance: minio
     app.kubernetes.io/version: "0.0.1"
-    app.kubernetes.io/managed-by: Helm
   annotations:
     openshift.io/host.generated: 'true'
 spec:
@@ -15,7 +14,7 @@ spec:
   subdomain: ''
   to:
     kind: Service
-    name: minio-thanos-s3
+    name: minio-s3
     weight: 100
   port:
     targetPort: 33933

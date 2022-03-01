@@ -1,0 +1,307 @@
+# Save the output of this file and use kubectl create -f to import
+# it into Kubernetes.
+#
+# Created with podman-3.4.4
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2022-03-01T02:17:20Z"
+  labels:
+    app: thanos-s3
+  name: thanos-s3
+spec:
+  containers:
+  - args:
+    - server
+    - --console-address
+    - :9001
+    - /export
+    image: quay.io/minio/minio:latest
+    name: minio
+    ports:
+    - containerPort: 9000
+      hostPort: 9000
+    - containerPort: 10904
+      hostPort: 10904
+    - containerPort: 3000
+      hostPort: 3000
+    - containerPort: 9001
+      hostPort: 9001
+    resources: {}
+    securityContext:
+      capabilities:
+        drop:
+        - CAP_MKNOD
+        - CAP_NET_RAW
+        - CAP_AUDIT_WRITE
+    volumeMounts:
+    - mountPath: /data
+      name: e308df201045680373a53cc9a327cac31ffc1a37acc7b4b545da2a57caa33307-pvc
+    - mountPath: /export
+      name: thanos-s3_minio-pvc
+  - args:
+    - --path.procfs=/host/proc
+    - --path.rootfs=/rootfs
+    - --path.sysfs=/host/sys
+    - --collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($|/)
+    image: docker.io/prom/node-exporter:v1.3.1
+    name: node-exporter
+    resources: {}
+    securityContext:
+      capabilities:
+        drop:
+        - CAP_MKNOD
+        - CAP_NET_RAW
+        - CAP_AUDIT_WRITE
+    volumeMounts:
+    - mountPath: /host/proc
+      name: proc-host-0
+      readOnly: true
+    - mountPath: /host/sys
+      name: sys-host-1
+      readOnly: true
+    - mountPath: /rootfs
+      name: root-host-2
+      readOnly: true
+  - image: docker.io/grafana/grafana:7.5.15
+    name: grafana
+    resources: {}
+    securityContext:
+      capabilities:
+        drop:
+        - CAP_MKNOD
+        - CAP_NET_RAW
+        - CAP_AUDIT_WRITE
+  - command:
+    - |
+      sh -c 'sh -s << EOF
+      mc config host add tmp minio:9000 EXAMPLEKEY EXAMPLESECRET
+      mc mb tmp/thanos
+      mc config host rm tmp
+      sleep 10000000
+      EOF'
+    image: quay.io/minio/mc:latest
+    name: mc
+    resources: {}
+    securityContext:
+      capabilities:
+        drop:
+        - CAP_MKNOD
+        - CAP_NET_RAW
+        - CAP_AUDIT_WRITE
+  - args:
+    - --config.file=/etc/prometheus/prometheus.yml
+    - --storage.tsdb.path=/data/prom0
+    - --log.level=warn
+    - --web.enable-lifecycle
+    - --storage.tsdb.min-block-duration=2h
+    - --storage.tsdb.max-block-duration=2h
+    - --web.listen-address=0.0.0.0:9090
+    image: docker.io/prom/prometheus:v2.32.1
+    name: prometheus0
+    resources: {}
+    securityContext:
+      capabilities:
+        drop:
+        - CAP_MKNOD
+        - CAP_NET_RAW
+        - CAP_AUDIT_WRITE
+      runAsGroup: 0
+      runAsUser: 0
+    volumeMounts:
+    - mountPath: /etc/prometheus/prometheus.yml
+      name: home-mike-git-thanos-s3-data-prom0-prometheus.yml-host-0
+    - mountPath: /prometheus
+      name: 2b61810b8d9ee383fec0f5aaeef16062113c02b5a91f10eac422e0d00454bb47-pvc
+    - mountPath: /data
+      name: thanos-s3_thanos0-pvc
+  - args:
+    - store
+    - --debug.name=store
+    - --log.level=debug
+    - --grpc-address=0.0.0.0:10905
+    - --grpc-grace-period=1s
+    - --http-address=0.0.0.0:10906
+    - --http-grace-period=1s
+    - --data-dir=/data/store
+    - --objstore.config-file=/bucket.yml
+    image: docker.io/thanosio/thanos:v0.24.0
+    name: thanos-store
+    resources: {}
+    securityContext:
+      capabilities:
+        drop:
+        - CAP_MKNOD
+        - CAP_NET_RAW
+        - CAP_AUDIT_WRITE
+    volumeMounts:
+    - mountPath: /bucket.yml
+      name: home-mike-git-thanos-s3-data-bucket.yml-host-0
+    - mountPath: /data
+      name: thanos-s3_store-pvc
+  - args:
+    - receive
+    - --debug.name=receive
+    - --log.level=debug
+    - --tsdb.path=/data/remote-write-receive-data
+    - --grpc-address=0.0.0.0:10907
+    - --grpc-grace-period=1s
+    - --http-address=0.0.0.0:10909
+    - --http-grace-period=1s
+    - --label=receive="true"
+    - --objstore.config-file=/bucket.yml
+    - --remote-write.address=0.0.0.0:10908
+    image: docker.io/thanosio/thanos:v0.24.0
+    name: thanos-receive
+    resources: {}
+    securityContext:
+      capabilities:
+        drop:
+        - CAP_MKNOD
+        - CAP_NET_RAW
+        - CAP_AUDIT_WRITE
+    volumeMounts:
+    - mountPath: /bucket.yml
+      name: home-mike-git-thanos-s3-data-bucket.yml-host-0
+    - mountPath: /data
+      name: thanos-s3_receive-pvc
+  - args:
+    - sidecar
+    - --debug.name=sidecar-0
+    - --log.level=debug
+    - --grpc-address=0.0.0.0:10901
+    - --grpc-grace-period=1s
+    - --http-address=0.0.0.0:10902
+    - --http-grace-period=1s
+    - --prometheus.url=http://prometheus0:9090
+    - --tsdb.path=/data/prom0
+    - --objstore.config-file=/bucket.yml
+    image: docker.io/thanosio/thanos:v0.24.0
+    name: thanos-sidecar0
+    resources: {}
+    securityContext:
+      capabilities:
+        drop:
+        - CAP_MKNOD
+        - CAP_NET_RAW
+        - CAP_AUDIT_WRITE
+    volumeMounts:
+    - mountPath: /bucket.yml
+      name: home-mike-git-thanos-s3-data-bucket.yml-host-0
+    - mountPath: /data
+      name: thanos-s3_thanos0-pvc
+  - args:
+    - --config.file=/etc/prometheus/prometheus.yml
+    - --storage.tsdb.path=/prometheus
+    - --web.listen-address=0.0.0.0:9099
+    image: docker.io/prom/prometheus:v2.32.1
+    name: thanos-remote-write
+    resources: {}
+    securityContext:
+      capabilities:
+        drop:
+        - CAP_MKNOD
+        - CAP_NET_RAW
+        - CAP_AUDIT_WRITE
+      runAsGroup: 0
+      runAsUser: 0
+    volumeMounts:
+    - mountPath: /etc/prometheus/prometheus.yml
+      name: home-mike-git-thanos-s3-data-local-prometheus-data-prometheus.yml-host-0
+    - mountPath: /prometheus
+      name: d2b8c601f0a05c7f13bbbe7f9f4e3d5e48493ed45598321a4feac79e5b956b9a-pvc
+  - args:
+    - compact
+    - --data-dir=/tmp/thanos-compact
+    - --log.level=debug
+    - --objstore.config-file=/bucket.yml
+    - --http-address=0.0.0.0:10922
+    - --http-grace-period=2m
+    - --consistency-delay=30m
+    image: docker.io/thanosio/thanos:v0.24.0
+    name: compactor
+    resources: {}
+    securityContext:
+      capabilities:
+        drop:
+        - CAP_MKNOD
+        - CAP_NET_RAW
+        - CAP_AUDIT_WRITE
+    volumeMounts:
+    - mountPath: /bucket.yml
+      name: home-mike-git-thanos-s3-data-bucket.yml-host-0
+    - mountPath: /tmp
+      name: thanos-s3_compact-pvc
+  - args:
+    - query
+    - --debug.name=query0
+    - --log.level=debug
+    - --grpc-address=0.0.0.0:10903
+    - --grpc-grace-period=1s
+    - --http-address=0.0.0.0:10904
+    - --http-grace-period=1s
+    - --query.replica-label=prometheus
+    - --store=sidecar0:10901
+    - --store=store:10905
+    - --store=receive:10907
+    image: docker.io/thanosio/thanos:v0.24.0
+    name: thanos-query0
+    resources: {}
+    securityContext:
+      capabilities:
+        drop:
+        - CAP_MKNOD
+        - CAP_NET_RAW
+        - CAP_AUDIT_WRITE
+  restartPolicy: Never
+  volumes:
+  - name: thanos-s3_minio-pvc
+    persistentVolumeClaim:
+      claimName: thanos-s3_minio
+  - hostPath:
+      path: /home/mike/git/thanos-s3/data/prom0/prometheus.yml
+      type: File
+    name: home-mike-git-thanos-s3-data-prom0-prometheus.yml-host-0
+  - name: 2b61810b8d9ee383fec0f5aaeef16062113c02b5a91f10eac422e0d00454bb47-pvc
+    persistentVolumeClaim:
+      claimName: 2b61810b8d9ee383fec0f5aaeef16062113c02b5a91f10eac422e0d00454bb47
+  - hostPath:
+      path: /home/mike/git/thanos-s3/data/local-prometheus-data/prometheus.yml
+      type: File
+    name: home-mike-git-thanos-s3-data-local-prometheus-data-prometheus.yml-host-0
+  - hostPath:
+      path: /home/mike/git/thanos-s3/data/bucket.yml
+      type: File
+    name: home-mike-git-thanos-s3-data-bucket.yml-host-0
+  - name: thanos-s3_store-pvc
+    persistentVolumeClaim:
+      claimName: thanos-s3_store
+  - name: d2b8c601f0a05c7f13bbbe7f9f4e3d5e48493ed45598321a4feac79e5b956b9a-pvc
+    persistentVolumeClaim:
+      claimName: d2b8c601f0a05c7f13bbbe7f9f4e3d5e48493ed45598321a4feac79e5b956b9a
+  - name: thanos-s3_compact-pvc
+    persistentVolumeClaim:
+      claimName: thanos-s3_compact
+  - name: e308df201045680373a53cc9a327cac31ffc1a37acc7b4b545da2a57caa33307-pvc
+    persistentVolumeClaim:
+      claimName: e308df201045680373a53cc9a327cac31ffc1a37acc7b4b545da2a57caa33307
+  - hostPath:
+      path: /proc
+      type: Directory
+    name: proc-host-0
+  - hostPath:
+      path: /sys
+      type: Directory
+    name: sys-host-1
+  - hostPath:
+      path: /
+      type: Directory
+    name: root-host-2
+  - name: thanos-s3_receive-pvc
+    persistentVolumeClaim:
+      claimName: thanos-s3_receive
+  - name: thanos-s3_thanos0-pvc
+    persistentVolumeClaim:
+      claimName: thanos-s3_thanos0
+status: {}
+

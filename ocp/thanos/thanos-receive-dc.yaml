@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thanos-receive
+  labels:
+    app.kubernetes.io/name: thanos-receive
+    app.kubernetes.io/instance: thanos-receive
+    app.kubernetes.io/version: "0.0.1"
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: thanos-receive
+      app.kubernetes.io/instance: thanos-receive
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: thanos-receive
+        app.kubernetes.io/instance: thanos-receive
+        app.kubernetes.io/version: "0.0.1"
+    spec:
+      containers:
+        - name: thanos
+          image: docker.io/thanosio/thanos:v0.24.0
+          imagePullPolicy: IfNotPresent
+          resources: {}
+          args:
+          - receive
+          - --debug.name=receive
+          - --log.level=debug
+          - --tsdb.path=/data/remote-write-receive-data
+          - --grpc-address=0.0.0.0:10907
+          - --grpc-grace-period=1s
+          - --http-address=0.0.0.0:10909
+          - --http-grace-period=1s
+          - --label=receive="true"
+          - --objstore.config-file=/mnt/bucket.yaml
+          - --remote-write.address=0.0.0.0:10908
+          ports:
+            - containerPort: 10907
+            - containerPort: 10908
+            - containerPort: 10909
+          volumeMounts:
+            - name: storage
+              mountPath: "/storage"
+            - name: config
+              mountPath: "/mnt"
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: thanos-receive
+        - name: config
+          configMap:
+            name: s3-bucket

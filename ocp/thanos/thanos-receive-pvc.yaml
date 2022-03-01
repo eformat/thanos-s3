@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: minio-s3
+  name: thanos-receive
 spec:
   accessModes:
     - ReadWriteOnce

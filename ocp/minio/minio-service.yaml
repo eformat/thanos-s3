@@ -1,13 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-#  namespace: ml-workshop
-  name: minio-thanos-s3
+  name: minio-s3
   labels:
     app.kubernetes.io/name: minio
-    app.kubernetes.io/instance: min
+    app.kubernetes.io/instance: minio
     app.kubernetes.io/version: "0.0.1"
-    app.kubernetes.io/managed-by: Helm
 spec:
   ports:
     - port: 9000
@@ -19,6 +17,6 @@ spec:
 
   selector:
     app.kubernetes.io/name: minio
-    app.kubernetes.io/instance: min
+    app.kubernetes.io/instance: minio
   type: ClusterIP
   sessionAffinity: None

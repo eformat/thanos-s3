@@ -11,6 +11,5 @@ metadata:
   name: promconfig
   labels:
     app.kubernetes.io/name: minio
-    app.kubernetes.io/instance: min
+    app.kubernetes.io/instance: minio
     app.kubernetes.io/version: "0.0.1"
-    app.kubernetes.io/managed-by: Helm
