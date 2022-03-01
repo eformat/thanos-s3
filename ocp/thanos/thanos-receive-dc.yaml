@@ -28,6 +28,8 @@ spec:
           args:
           - receive
           - --debug.name=receive
+          - --tsdb.min-block-duration=5m
+          - --tsdb.max-block-duration=5m
           - --log.level=debug
           - --tsdb.path=/data/remote-write-receive-data
           - --grpc-address=0.0.0.0:10907
@@ -43,7 +45,7 @@ spec:
             - containerPort: 10909
           volumeMounts:
             - name: storage
-              mountPath: "/storage"
+              mountPath: "/data"
             - name: config
               mountPath: "/mnt"
       volumes:
