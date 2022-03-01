@@ -19,9 +19,9 @@ More complete example running locally.
 podman-compose up -d
 ```
 
-http://localhost:10904/graph
-http://localhost:9001/buckets/thanos/browse
-http://localhost:3000/login
+- http://localhost:10904/graph
+- http://localhost:9001/buckets/thanos/browse
+- http://localhost:3000/login
 
 ## Links
 
