@@ -191,7 +191,7 @@ services:
       - "--http-address=0.0.0.0:10909"
       - "--http-grace-period=1s"
       - "--label=receive=\"true\""
-      - "--objstore.config-file=/bucket.yml"
+      - "--objstore.config-file=/bucket .yml"
       - "--remote-write.address=0.0.0.0:10908"
     volumes:
       - receive:/data

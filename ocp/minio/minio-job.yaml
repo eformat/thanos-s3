@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+#  namespace: ml-workshop
+  name: minio-thanos-s3
+  labels:
+    app.kubernetes.io/name: minio
+    app.kubernetes.io/instance: min
+    app.kubernetes.io/version: "0.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  template:
+    metadata:
+      name: minio-setup-thanos-s3
+    spec:
+      restartPolicy: OnFailure
+      volumes:
+        - name: config
+          emptyDir: {}
+        - configMap:
+            defaultMode: 420
+            name: promconfig
+          name: promconfig
+      containers:
+        - name: mc
+          image: minio/mc:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - "mc --config-dir=/config config host add local http://minio-thanos-s3:9000 minio minio123 && mc --config-dir=/config mb --ignore-existing local/thanos/ && mc --config-dir=/config policy set public local/thanos"
+          volumeMounts:
+            - name: config
+              mountPath: "/config"
+            - mountPath: /tmp/prometheus_config.config
+              name: promconfig
+              subPath: prometheus_config.config
